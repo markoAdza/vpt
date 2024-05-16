@@ -174,7 +174,7 @@ _integrateFrame() {
     mat4.invert(matrix, matrix);
     gl.uniformMatrix4fv(uniforms.uMvpInverseMatrix, false, matrix);
 
-    gl.drawBuffers([
+    gl.drawBuffers([ // podamo kje se shrani output fragmenta "color" = "specification"
         gl.COLOR_ATTACHMENT0,
         gl.COLOR_ATTACHMENT1,
         gl.COLOR_ATTACHMENT2,

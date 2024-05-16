@@ -62,6 +62,7 @@ uniform uint uSteps;
 
 in vec2 vPosition;
 
+//gl.drawBuffers from js
 layout (location = 0) out vec4 oPosition;
 layout (location = 1) out vec4 oDirection;
 layout (location = 2) out vec4 oTransmittance;

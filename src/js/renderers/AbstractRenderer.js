@@ -58,7 +58,7 @@ destroy() {
 }
 
 render() {
-    this._frameBuffer.use();
+    this._frameBuffer.use(); //output fragment shaderja -> rez mip renderja
     this._generateFrame();
 
     this._accumulationBuffer.use();
