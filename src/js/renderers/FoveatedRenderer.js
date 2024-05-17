@@ -5,6 +5,8 @@ import { AbstractRenderer } from './AbstractRenderer.js';
 
 import { PerspectiveCamera } from '../PerspectiveCamera.js';
 
+import { QuadTree } from '../Quad.js';
+
 const [SHADERS, MIXINS] = await Promise.all([
     'shaders.json',
     'mixins.json',
@@ -133,7 +135,7 @@ export class FoveatedRenderer extends AbstractRenderer {
         mat4.invert(matrix, matrix);
         gl.uniformMatrix4fv(uniforms.uMvpInverseMatrix, false, matrix);
 
-        gl.drawArrays(gl.POINTS, 0, 10000);
+        gl.drawArrays(gl.POINTS, 0, 1000);
     }
 
     _renderFrame() {
@@ -148,6 +150,34 @@ export class FoveatedRenderer extends AbstractRenderer {
         gl.uniform1i(uniforms.uAccumulator, 0);
 
         gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+        function getImageDataFromFrameBuffer(gl, framebuffer, width, height) {
+            if (!(framebuffer instanceof WebGLFramebuffer)) {
+                throw new TypeError('Expected framebuffer to be an instance of WebGLFramebuffer');
+            }
+        
+            gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+            const data = new Uint8Array(width * height * 4);
+            gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            return data;
+        }
+        
+        const width = 256;
+        const height = 256;
+        
+        const framebuffer = this._accumulationBuffer._writeFramebuffer
+        if (framebuffer) {
+            const imageData = getImageDataFromFrameBuffer(gl, framebuffer, width, height);
+            
+            const quadTree = new QuadTree(imageData, width, height, 3);
+        
+            const densestRegion = quadTree.getMostDenseRegion();
+            const leastDenseRegion = quadTree.getLeastDenseRegion();
+        
+            console.log('Densest Region:', densestRegion);
+            console.log('Least Dense Region:', leastDenseRegion);
+        }
     }
 
     _getFrameBufferSpec() {
