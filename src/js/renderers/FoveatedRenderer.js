@@ -171,12 +171,9 @@ export class FoveatedRenderer extends AbstractRenderer {
             const imageData = getImageDataFromFrameBuffer(gl, framebuffer, width, height);
             
             const quadTree = new QuadTree(imageData, width, height, 3);
-        
-            const densestRegion = quadTree.getMostDenseRegion();
-            const leastDenseRegion = quadTree.getLeastDenseRegion();
-        
-            console.log('Densest Region:', densestRegion);
-            console.log('Least Dense Region:', leastDenseRegion);
+
+            const allRegions = quadTree.getRegionsByDepth();
+            console.log(allRegions);
         }
     }
 

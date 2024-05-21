@@ -19,11 +19,15 @@ export class QuadTreeNode {
             const halfHeight = this.height / 2;
             const depth = this.depth - 1;
 
-            this.children.push(new QuadTreeNode(this.x, this.y, halfWidth, halfHeight, depth));
-            this.children.push(new QuadTreeNode(this.x + halfWidth, this.y, halfWidth, halfHeight, depth));
-            this.children.push(new QuadTreeNode(this.x, this.y + halfHeight, halfWidth, halfHeight, depth));
-            this.children.push(new QuadTreeNode(this.x + halfWidth, this.y + halfHeight, halfWidth, halfHeight, depth));
+            // Define starting positions for each child
+            const childXPositions = [this.x, this.x + halfWidth, this.x, this.x + halfWidth];
+            const childYPositions = [this.y, this.y, this.y + halfHeight, this.y + halfHeight];
 
+            for (let i = 0; i < 4; i++) {
+                this.children.push(new QuadTreeNode(childXPositions[i], childYPositions[i], halfWidth, halfHeight, depth));
+            }
+
+            // Recursively subdivide each child node
             for (let child of this.children) {
                 child.subdivide();
             }
@@ -44,12 +48,7 @@ export class QuadTree {
     }
 
     buildTree(node) {
-        if (node.depth > 0) {
-            node.subdivide();
-            for (let child of node.children) {
-                this.buildTree(child);
-            }
-        }
+        node.subdivide();
     }
 
     calculateDensities(node) {
@@ -74,6 +73,31 @@ export class QuadTree {
             }
         }
         return sum / (node.width * node.height);
+    }
+
+    getRegionsByDepth() {
+        const result = [];
+
+        function traverse(node, depth) {
+            if (!result[depth]) {
+                result[depth] = [];
+            }
+            result[depth].push({
+                x: node.x,
+                y: node.y,
+                width: node.width,
+                height: node.height,
+                density: node.density,
+                children: []
+            });
+
+            for (let child of node.children) {
+                traverse(child, depth + 1);
+            }
+        }
+
+        traverse(this.root, 0);
+        return result;
     }
 
     getMostDenseRegion() {
