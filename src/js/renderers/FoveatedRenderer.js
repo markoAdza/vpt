@@ -48,6 +48,11 @@ export class FoveatedRenderer extends AbstractRenderer {
         });
 
         this._programs = WebGL.buildPrograms(this._gl, SHADERS.renderers.FOVEATED, MIXINS);
+        this.allRegions = null;
+    }
+
+    getDensity(){
+        return this.allRegions;
     }
 
     destroy() {
@@ -135,7 +140,7 @@ export class FoveatedRenderer extends AbstractRenderer {
         mat4.invert(matrix, matrix);
         gl.uniformMatrix4fv(uniforms.uMvpInverseMatrix, false, matrix);
 
-        gl.drawArrays(gl.POINTS, 0, 1000);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
     _renderFrame() {
@@ -172,8 +177,8 @@ export class FoveatedRenderer extends AbstractRenderer {
             
             const quadTree = new QuadTree(imageData, width, height, 3);
 
-            const allRegions = quadTree.getRegionsByDepth();
-            console.log(allRegions);
+            this.allRegions = quadTree.getRegionsByDepth();
+            //console.log(this.allRegions);
         }
     }
 

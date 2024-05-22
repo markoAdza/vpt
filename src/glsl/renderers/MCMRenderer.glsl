@@ -228,6 +228,7 @@ void main() {
 
 #version 300 es
 precision mediump float;
+precision mediump sampler2D;
 
 // #link /glsl/mixins/Photon
 @Photon
@@ -249,6 +250,7 @@ uniform mat4 uMvpInverseMatrix;
 uniform vec2 uInverseResolution;
 uniform float uRandSeed;
 uniform float uBlur;
+uniform sampler2D uRegionDensityMap;
 
 in vec2 vPosition;
 
@@ -262,6 +264,12 @@ void main() {
     vec3 from, to;
     uint state = hash(uvec3(floatBitsToUint(vPosition.x), floatBitsToUint(vPosition.y), floatBitsToUint(uRandSeed)));
     unprojectRand(state, vPosition, uMvpInverseMatrix, uInverseResolution, uBlur, from, to);
+    
+    float density = texture(uRegionDensityMap, vPosition).r;
+    if (random_uniform(state) > density) {
+        discard;
+    }
+
     photon.direction = normalize(to - from);
     vec2 tbounds = max(intersectCube(from, photon.direction), 0.0);
     photon.position = from + tbounds.x * photon.direction;

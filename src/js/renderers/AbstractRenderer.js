@@ -48,6 +48,10 @@ constructor(gl, volume, camera, environmentTexture, options = {}) {
     }, MIXINS).quad;
 }
 
+getDensity(){
+    
+}
+
 destroy() {
     const gl = this._gl;
     this._frameBuffer.destroy();

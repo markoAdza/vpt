@@ -151,13 +151,31 @@ setFilter(filter) {
 }
 
 chooseRenderer(renderer) {
+    var density = null;
+
     if (this.renderer) {
+        density = this.renderer.getDensity();
+
+        if(density){
+            var densityData = new Uint8Array(8 * 8 * 4);
+            for (let index = 0; index < density[3].length; index++) {
+                densityData[index * 4] = density[3][index].density * 255 / density[0][0].density;
+            }
+        }
+
+        var desnsityTexture = WebGL.createTexture(this.gl, {
+            data: densityData,
+            width: 8,
+            height: 8,
+        });
+
         this.renderer.destroy();
     }
     const rendererClass = RendererFactory(renderer);
     this.renderer = new rendererClass(this.gl, this.volume, this.camera, this.environmentTexture, {
         resolution: this.resolution,
         transform: this.volumeTransform,
+        density: desnsityTexture,
     });
     this.renderer.reset();
     if (this.toneMapper) {

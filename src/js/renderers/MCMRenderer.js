@@ -15,6 +15,8 @@ export class MCMRenderer extends AbstractRenderer {
 constructor(gl, volume, camera, environmentTexture, options = {}) {
     super(gl, volume, camera, environmentTexture, options);
 
+    this.regionDensityMap = options.density;
+
     this.registerProperties([
         {
             name: 'extinction',
@@ -84,7 +86,6 @@ destroy() {
 
 _resetFrame() {
     const gl = this._gl;
-
     const { program, uniforms } = this._programs.reset;
     gl.useProgram(program);
 
@@ -151,6 +152,10 @@ _integrateFrame() {
     gl.activeTexture(gl.TEXTURE6);
     gl.bindTexture(gl.TEXTURE_2D, this._transferFunction);
     gl.uniform1i(uniforms.uTransferFunction, 6);
+
+    gl.activeTexture(gl.TEXTURE7);
+    gl.bindTexture(gl.TEXTURE_2D, this.regionDensityMap);
+    gl.uniform1i(uniforms.uRegionDensityMap, 7);
 
     gl.uniform2f(uniforms.uInverseResolution, 1 / this._resolution, 1 / this._resolution);
     gl.uniform1f(uniforms.uRandSeed, Math.random());

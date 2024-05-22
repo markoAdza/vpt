@@ -67,7 +67,7 @@ export class QuadTree {
         let sum = 0;
         for (let i = node.y; i < node.y + node.height; i++) {
             for (let j = node.x; j < node.x + node.width; j++) {
-                const index = (i * this.width + j) * 4; // Assuming imageData is in RGBA format
+                const index = (i * this.width + j) * 4; 
                 const intensity = this.imageData[index]; // Using red channel for intensity
                 sum += intensity;
             }
