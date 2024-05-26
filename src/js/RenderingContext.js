@@ -22,6 +22,8 @@ export class RenderingContext extends EventTarget {
 constructor(options = {}) {
     super();
 
+    this.frameCnt = 0;
+
     this.render = this.render.bind(this);
     this.webglcontextlostHandler = this.webglcontextlostHandler.bind(this);
     this.webglcontextrestoredHandler = this.webglcontextrestoredHandler.bind(this);
@@ -155,12 +157,18 @@ chooseRenderer(renderer) {
 
     if (this.renderer) {
         density = this.renderer.getDensity();
+        console.log(density);
 
         if(density){
-            var densityData = new Uint8Array(8 * 8 * 4);
+            var densityData = new Uint8Array(64 * 4);
             for (let index = 0; index < density[3].length; index++) {
                 densityData[index * 4] = density[3][index].density * 255 / density[0][0].density;
             }
+        }
+
+        if(density){
+            var tmp = density[0][0].density;
+            console.log("density[0][0]: " + tmp);
         }
 
         var desnsityTexture = WebGL.createTexture(this.gl, {
@@ -206,6 +214,8 @@ chooseToneMapper(toneMapper) {
 }
 
 render() {
+    this.frameCnt++;
+
     const gl = this.gl;
     if (!gl || !this.renderer || !this.toneMapper) {
         return;
@@ -275,6 +285,7 @@ async recordAnimationToImageSequence(options = {}) {
     const { directory, startTime, endTime, frameTime, fps } = options;
     const frames = Math.max(Math.ceil((endTime - startTime) * fps), 1);
     const timeStep = 1 / fps;
+    var totalTime = 0;
 
     function wait(millis) {
         return new Promise((resolve, reject) => setTimeout(resolve, millis));
@@ -296,14 +307,27 @@ async recordAnimationToImageSequence(options = {}) {
 
     this.stopRendering();
 
+    this._resolution;
+
+    this.frameCnt = 0;
+
     for (let i = 0; i < frames; i++) {
         const t = startTime + i * timeStep;
         this.cameraAnimator.update(t);
 
         this.renderer.reset();
+
+        const strtTime = performance.now();
+
         this.startRendering();
         await wait(frameTime * 1000);
         this.stopRendering();
+
+        const enTime = performance.now();
+        
+        const convergenceTime = enTime - strtTime;
+        totalTime += convergenceTime;
+        console.log(`Frame ${i + 1} time: ${convergenceTime} ms`);
 
         const filename = `frame${pad(i, 4)}.png`;
         const file = await directory.getFileHandle(filename, { create: true })
@@ -317,6 +341,7 @@ async recordAnimationToImageSequence(options = {}) {
         }));
     }
 
+    console.log("Time per frame: " + frameTime / this.frameCnt);
     this.startRendering();
 }
 
@@ -348,15 +373,25 @@ async recordAnimationToVideo(options = {}) {
 
     this.stopRendering();
     recorder.start();
+    var totalTime = 0;
 
     for (let i = 0; i < frames; i++) {
         const t = startTime + i * timeStep;
         this.cameraAnimator.update(t);
 
         this.renderer.reset();
+
+        const strtTime = performance.now();
+        
         this.startRendering();
         await wait(frameTime * 1000);
         this.stopRendering();
+
+        const enTime = performance.now();
+        
+        const convergenceTime = enTime - strtTime;
+        totalTime += convergenceTime;
+        console.log(`Frame ${i + 1} convergence time: ${convergenceTime} ms`);
 
         videoStream.requestFrame();
 
@@ -365,6 +400,7 @@ async recordAnimationToVideo(options = {}) {
         }));
     }
 
+    console.log("TOTAL TIME: " + totalTime);
     recorder.stop();
     this.startRendering();
 }

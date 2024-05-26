@@ -60,6 +60,8 @@ uniform float uAnisotropy;
 uniform uint uMaxBounces;
 uniform uint uSteps;
 
+uniform sampler2D uRegionDensityMap;
+
 in vec2 vPosition;
 
 //gl.drawBuffers from js
@@ -127,7 +129,15 @@ void main() {
     photon.samples = uint(radianceAndSamples.w + 0.5);
 
     uint state = hash(uvec3(floatBitsToUint(mappedPosition.x), floatBitsToUint(mappedPosition.y), floatBitsToUint(uRandSeed)));
+
     for (uint i = 0u; i < uSteps; i++) {
+
+        float density = texture(uRegionDensityMap, vPosition).r;
+        if (random_uniform(state) < density) {
+            resetPhoton(state, photon);
+            continue;
+        }
+
         float dist = random_exponential(state, uExtinction);
         photon.position += dist * photon.direction;
 
@@ -265,10 +275,10 @@ void main() {
     uint state = hash(uvec3(floatBitsToUint(vPosition.x), floatBitsToUint(vPosition.y), floatBitsToUint(uRandSeed)));
     unprojectRand(state, vPosition, uMvpInverseMatrix, uInverseResolution, uBlur, from, to);
     
-    float density = texture(uRegionDensityMap, vPosition).r;
-    if (random_uniform(state) > density) {
-        discard;
-    }
+    // float density = texture(uRegionDensityMap, vPosition).r;
+    // if (density > 0.9) {
+    //     discard;
+    // }
 
     photon.direction = normalize(to - from);
     vec2 tbounds = max(intersectCube(from, photon.direction), 0.0);
